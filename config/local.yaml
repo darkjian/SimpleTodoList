@@ -1,0 +1,6 @@
+server:
+  port: ":8081"
+  read_timeout_seconds: 10
+  write_timeout_seconds: 10
+  idle_timeout_seconds: 120
+database_url: "postgresql://simple_todo_tasks:simple_todo_tasks_password@127.0.0.1:5433/todo_tasks?sslmode=disable"

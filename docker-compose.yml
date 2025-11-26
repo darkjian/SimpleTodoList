@@ -1,0 +1,31 @@
+services:
+  db:
+    container_name: task_db
+    image: postgres
+    env_file: .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${DATABASE_NAME}
+    ports:
+      - "${EXPORT_PORT}:5432"
+    volumes:
+      - "postgres_data:/var/lib/postgresql"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${DATABASE_NAME}" ]
+      interval: 10s
+      timeout: 5s
+
+  migrate:
+    container_name: task_migrations
+    image: migrate/migrate
+    depends_on:
+      db:
+        condition: service_healthy
+
+    volumes:
+      - ./migrations:/migrations
+    command: [ "-path", ./migrations, "-database", "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${DATABASE_NAME}?sslmode=disable", "up" ]
+
+volumes:
+  postgres_data:

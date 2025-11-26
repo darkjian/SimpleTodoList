@@ -1,0 +1,15 @@
+BEGIN;
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE SCHEMA IF NOT EXISTS core;
+---
+--- tasks
+---
+CREATE TABLE IF NOT EXISTS core.tasks (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    title TEXT NOT NULL,
+    completed_at TIMESTAMPTZ,
+    deleted_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT(NOW() AT TIME ZONE 'UTC'),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT(NOW() AT TIME ZONE 'UTC')
+);
+COMMIT;
