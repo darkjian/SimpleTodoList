@@ -62,12 +62,7 @@ func (s *TaskService) CreateTask(ctx context.Context, title string) (CreateTaskO
 	}
 
 	if err := s.repo.CreateTask(ctx, task); err != nil {
-		switch {
-		case errors.Is(err, domain.ErrNotFound):
-			return CreateTaskOut{}, e.New(CodeNotFound, err)
-		default:
-			return CreateTaskOut{}, e.New(CodeInternal, err)
-		}
+		return CreateTaskOut{}, e.New(CodeInternal, err)
 	}
 
 	return CreateTaskOut{Task: *task}, nil
@@ -86,12 +81,7 @@ func (s *TaskService) ListTasks(ctx context.Context, in ListTasksIn) (ListTasksO
 
 	out, err := s.repo.ListTasks(ctx, in.Limit, in.Offset)
 	if err != nil {
-		switch {
-		case errors.Is(err, domain.ErrNotFound):
-			return ListTasksOut{}, e.New(CodeNotFound, err)
-		default:
-			return ListTasksOut{}, e.New(CodeInternal, err)
-		}
+		return ListTasksOut{}, e.New(CodeInternal, err)
 	}
 
 	return ListTasksOut{

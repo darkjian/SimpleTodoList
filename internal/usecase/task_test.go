@@ -141,6 +141,18 @@ func TestTaskService_CreateTask(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name:  "successfully create task",
+			title: "test title",
+			mockFunc: func(m *mocks.MockTaskRepository) {
+				expectedTask := &domain.Task{
+					Title: "test title",
+				}
+				m.EXPECT().CreateTask(gomock.Any(), expectedTask).
+					Return(errors.New("internal error"))
+			},
+			wantErr: true,
+		},
 	}
 
 	for _, tt := range tests {
