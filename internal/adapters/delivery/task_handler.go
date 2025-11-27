@@ -14,6 +14,7 @@ type TaskServicer interface {
 	CreateTask(ctx context.Context, title string) (usecase.CreateTaskOut, error)
 	ListTasks(ctx context.Context, in usecase.ListTasksIn) (usecase.ListTasksOut, error)
 	DeleteTask(ctx context.Context, id string) error
+	CompleteTask(ctx context.Context, id string) error
 }
 
 type TaskHandler struct {
@@ -109,12 +110,12 @@ func (h *TaskHandler) ListTasks(c *gin.Context) {
 	presenter.ListTasksOnSuccess(c, out)
 }
 
-type DeleteTask struct {
+type DeleteTaskRequest struct {
 	TaskID string `uri:"id" binding:"required,uuid"`
 }
 
 func (h *TaskHandler) DeleteTask(c *gin.Context) {
-	var request DeleteTask
+	var request DeleteTaskRequest
 
 	if err := c.ShouldBindUri(&request); err != nil {
 		presenter.DeleteTaskWithError(c, e.New(usecase.CodeInvalidIDFormat, err))
@@ -124,6 +125,27 @@ func (h *TaskHandler) DeleteTask(c *gin.Context) {
 	err := h.service.DeleteTask(c.Request.Context(), request.TaskID)
 	if err != nil {
 		presenter.DeleteTaskWithError(c, err)
+		return
+	}
+
+	c.Status(200)
+}
+
+type CompleteTaskRequest struct {
+	TaskID string `uri:"id" binding:"required,uuid"`
+}
+
+func (h *TaskHandler) CompleteTask(c *gin.Context) {
+	var request CompleteTaskRequest
+
+	if err := c.ShouldBindUri(&request); err != nil {
+		presenter.CompleteTaskWithError(c, e.New(usecase.CodeInvalidIDFormat, err))
+		return
+	}
+
+	err := h.service.CompleteTask(c.Request.Context(), request.TaskID)
+	if err != nil {
+		presenter.CompleteTaskWithError(c, err)
 		return
 	}
 

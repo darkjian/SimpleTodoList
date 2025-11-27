@@ -269,7 +269,7 @@ func TestTaskService_DeleteTask(t *testing.T) {
 			id:   "550e8400-e29b-41d4-a716-446655440000",
 			setupMock: func(mockRepo *mocks.MockTaskRepository) {
 				mockRepo.EXPECT().
-					SoftDeleteTask(gomock.Any(), domain.ID("550e8400-e29b-41d4-a716-446655440000")).
+					DeleteTask(gomock.Any(), domain.ID("550e8400-e29b-41d4-a716-446655440000")).
 					Return(nil)
 			},
 			wantErr: false,
@@ -287,7 +287,7 @@ func TestTaskService_DeleteTask(t *testing.T) {
 			id:   "550e8400-e29b-41d4-a716-446655440000",
 			setupMock: func(mockRepo *mocks.MockTaskRepository) {
 				mockRepo.EXPECT().
-					SoftDeleteTask(gomock.Any(), domain.ID("550e8400-e29b-41d4-a716-446655440000")).
+					DeleteTask(gomock.Any(), domain.ID("550e8400-e29b-41d4-a716-446655440000")).
 					Return(errors.New("database error"))
 			},
 			wantErr: true,

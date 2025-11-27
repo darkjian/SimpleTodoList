@@ -3,6 +3,7 @@ package database
 
 import (
 	"context"
+	"time"
 
 	"github.com/darkjian/simpletodolist/internal/domain"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -122,11 +123,16 @@ func (r *TaskRepo) CreateTask(ctx context.Context, t *domain.Task) (_ error) {
 	return nil
 }
 
-func (r *TaskRepo) UpdateTask(ctx context.Context, t *domain.Task) (_ error) {
-	panic("not implemented") // TODO: Implement
+func (r *TaskRepo) CompleteTask(ctx context.Context, id domain.ID, completedAt time.Time) (_ error) {
+	query := `UPDATE core.tasks SET completed_at=COALESCE(completed_at, $1) WHERE id=$2`
+	if _, err := r.db.Conn().Exec(ctx, query, completedAt, id); err != nil {
+		return normalizePGError(err)
+	}
+
+	return nil
 }
 
-func (r *TaskRepo) SoftDeleteTask(ctx context.Context, id domain.ID) (_ error) {
+func (r *TaskRepo) DeleteTask(ctx context.Context, id domain.ID) (_ error) {
 	query := `DELETE from core.tasks WHERE id=$1`
 	if _, err := r.db.Conn().Exec(ctx, query, id); err != nil {
 		return normalizePGError(err)

@@ -19,8 +19,8 @@ type TaskRepo interface {
 	ListTasks(ctx context.Context, limit, offset int) (*PaginatedTasks, error)
 	GetTask(ctx context.Context, id ID) (*Task, error)
 	CreateTask(ctx context.Context, t *Task) error
-	UpdateTask(ctx context.Context, t *Task) error
-	SoftDeleteTask(ctx context.Context, id ID) error
+	CompleteTask(ctx context.Context, id ID, completedAt time.Time) error
+	DeleteTask(ctx context.Context, id ID) error
 }
 
 type Task struct {

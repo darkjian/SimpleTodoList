@@ -12,6 +12,7 @@ package mocks
 import (
 	context "context"
 	reflect "reflect"
+	time "time"
 
 	domain "github.com/darkjian/simpletodolist/internal/domain"
 	gomock "go.uber.org/mock/gomock"
@@ -41,6 +42,20 @@ func (m *MockTaskRepository) EXPECT() *MockTaskRepositoryMockRecorder {
 	return m.recorder
 }
 
+// CompleteTask mocks base method.
+func (m *MockTaskRepository) CompleteTask(ctx context.Context, id domain.ID, completedAt time.Time) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CompleteTask", ctx, id, completedAt)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CompleteTask indicates an expected call of CompleteTask.
+func (mr *MockTaskRepositoryMockRecorder) CompleteTask(ctx, id, completedAt any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CompleteTask", reflect.TypeOf((*MockTaskRepository)(nil).CompleteTask), ctx, id, completedAt)
+}
+
 // CreateTask mocks base method.
 func (m *MockTaskRepository) CreateTask(ctx context.Context, t *domain.Task) error {
 	m.ctrl.T.Helper()
@@ -53,6 +68,20 @@ func (m *MockTaskRepository) CreateTask(ctx context.Context, t *domain.Task) err
 func (mr *MockTaskRepositoryMockRecorder) CreateTask(ctx, t any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateTask", reflect.TypeOf((*MockTaskRepository)(nil).CreateTask), ctx, t)
+}
+
+// DeleteTask mocks base method.
+func (m *MockTaskRepository) DeleteTask(ctx context.Context, id domain.ID) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteTask", ctx, id)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteTask indicates an expected call of DeleteTask.
+func (mr *MockTaskRepositoryMockRecorder) DeleteTask(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteTask", reflect.TypeOf((*MockTaskRepository)(nil).DeleteTask), ctx, id)
 }
 
 // GetTask mocks base method.
@@ -83,32 +112,4 @@ func (m *MockTaskRepository) ListTasks(ctx context.Context, limit, offset int) (
 func (mr *MockTaskRepositoryMockRecorder) ListTasks(ctx, limit, offset any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListTasks", reflect.TypeOf((*MockTaskRepository)(nil).ListTasks), ctx, limit, offset)
-}
-
-// SoftDeleteTask mocks base method.
-func (m *MockTaskRepository) SoftDeleteTask(ctx context.Context, id domain.ID) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SoftDeleteTask", ctx, id)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SoftDeleteTask indicates an expected call of SoftDeleteTask.
-func (mr *MockTaskRepositoryMockRecorder) SoftDeleteTask(ctx, id any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SoftDeleteTask", reflect.TypeOf((*MockTaskRepository)(nil).SoftDeleteTask), ctx, id)
-}
-
-// UpdateTask mocks base method.
-func (m *MockTaskRepository) UpdateTask(ctx context.Context, t *domain.Task) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateTask", ctx, t)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdateTask indicates an expected call of UpdateTask.
-func (mr *MockTaskRepositoryMockRecorder) UpdateTask(ctx, t any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateTask", reflect.TypeOf((*MockTaskRepository)(nil).UpdateTask), ctx, t)
 }

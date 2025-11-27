@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/darkjian/simpletodolist/internal/domain"
 	e "github.com/darkjian/simpletodolist/internal/usecase/errorx"
@@ -13,7 +14,8 @@ type GetTaskRepository interface {
 	GetTask(ctx context.Context, id domain.ID) (_ *domain.Task, _ error)
 	CreateTask(ctx context.Context, t *domain.Task) error
 	ListTasks(ctx context.Context, limit, offset int) (*domain.PaginatedTasks, error)
-	SoftDeleteTask(ctx context.Context, id domain.ID) error
+	DeleteTask(ctx context.Context, id domain.ID) error
+	CompleteTask(ctx context.Context, id domain.ID, completedAt time.Time) error
 }
 
 type TaskService struct {
@@ -96,8 +98,25 @@ func (s *TaskService) DeleteTask(ctx context.Context, id string) error {
 		return e.New(CodeInvalidIDFormat, errors.New("invalid UUID format"))
 	}
 
-	if err := s.repo.SoftDeleteTask(ctx, domain.ID(id)); err != nil {
+	if err := s.repo.DeleteTask(ctx, domain.ID(id)); err != nil {
 		return e.New(CodeInternal, err)
+	}
+
+	return nil
+}
+
+func (s *TaskService) CompleteTask(ctx context.Context, id string) error {
+	if _, err := uuid.Parse(id); err != nil {
+		return e.New(CodeInvalidIDFormat, errors.New("invalid UUID format"))
+	}
+
+	if err := s.repo.CompleteTask(ctx, domain.ID(id), time.Now().UTC()); err != nil {
+		switch {
+		case errors.Is(err, domain.ErrNotFound):
+			return e.New(CodeNotFound, err)
+		default:
+			return e.New(CodeInternal, err)
+		}
 	}
 
 	return nil
