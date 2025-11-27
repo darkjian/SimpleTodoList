@@ -71,10 +71,10 @@ func (mr *MockTaskRepositoryMockRecorder) GetTask(ctx, id any) *gomock.Call {
 }
 
 // ListTasks mocks base method.
-func (m *MockTaskRepository) ListTasks(ctx context.Context, limit, offset int) ([]domain.Task, error) {
+func (m *MockTaskRepository) ListTasks(ctx context.Context, limit, offset int) (*domain.PaginatedTasks, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListTasks", ctx, limit, offset)
-	ret0, _ := ret[0].([]domain.Task)
+	ret0, _ := ret[0].(*domain.PaginatedTasks)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

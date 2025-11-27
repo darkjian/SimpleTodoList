@@ -12,6 +12,7 @@ import (
 type TaskServicer interface {
 	GetTask(ctx context.Context, id string) (usecase.GetTaskOut, error)
 	CreateTask(ctx context.Context, title string) (usecase.CreateTaskOut, error)
+	ListTasks(ctx context.Context, in usecase.ListTasksIn) (usecase.ListTasksOut, error)
 }
 
 type TaskHandler struct {
@@ -62,4 +63,47 @@ func (h *TaskHandler) CreateTask(c *gin.Context) {
 	}
 
 	presenter.CreateTaskOnSuccess(c, out)
+}
+
+type ListTasksRequest struct {
+	Limit  int `form:"limit" binding:"omitempty,gte=0,lte=100"`
+	Offset int `form:"offset" binding:"omitempty,gte=0"`
+}
+
+func (r *ListTasksRequest) Process() {
+	const defaultLimit = 10
+	const defaultOffset = 0
+	const maxLimit = 100
+
+	if r.Limit <= 0 {
+		r.Limit = defaultLimit
+	}
+	if r.Limit > maxLimit {
+		r.Limit = maxLimit
+	}
+	if r.Offset < 0 {
+		r.Offset = defaultOffset
+	}
+}
+
+func (h *TaskHandler) ListTasks(c *gin.Context) {
+	var request ListTasksRequest
+
+	if err := c.ShouldBindQuery(&request); err != nil {
+		presenter.ListTasksWithError(c, e.New(usecase.CodeInvalidParam, err))
+		return
+	}
+
+	request.Process()
+
+	out, err := h.service.ListTasks(c.Request.Context(), usecase.ListTasksIn{
+		Limit:  request.Limit,
+		Offset: request.Offset,
+	})
+	if err != nil {
+		presenter.ListTasksWithError(c, err)
+		return
+	}
+
+	presenter.ListTasksOnSuccess(c, out)
 }

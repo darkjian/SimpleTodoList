@@ -12,6 +12,7 @@ import (
 type GetTaskRepository interface {
 	GetTask(ctx context.Context, id domain.ID) (_ *domain.Task, _ error)
 	CreateTask(ctx context.Context, t *domain.Task) error
+	ListTasks(ctx context.Context, limit, offset int) (*domain.PaginatedTasks, error)
 }
 
 type TaskService struct {
@@ -69,4 +70,32 @@ func (s *TaskService) CreateTask(ctx context.Context, title string) (CreateTaskO
 	}
 
 	return CreateTaskOut{Task: *task}, nil
+}
+
+type ListTasksIn struct {
+	Limit, Offset int
+}
+
+type ListTasksOut struct {
+	Tasks             []domain.Task
+	Total, NextOffset int
+}
+
+func (s *TaskService) ListTasks(ctx context.Context, in ListTasksIn) (ListTasksOut, error) {
+
+	out, err := s.repo.ListTasks(ctx, in.Limit, in.Offset)
+	if err != nil {
+		switch {
+		case errors.Is(err, domain.ErrNotFound):
+			return ListTasksOut{}, e.New(CodeNotFound, err)
+		default:
+			return ListTasksOut{}, e.New(CodeInternal, err)
+		}
+	}
+
+	return ListTasksOut{
+		Tasks:      out.Tasks,
+		Total:      out.Total,
+		NextOffset: out.NextOffset,
+	}, nil
 }

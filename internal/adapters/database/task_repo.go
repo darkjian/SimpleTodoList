@@ -24,8 +24,63 @@ func NewTaskRepository(db Database) TaskRepository {
 	return &TaskRepo{db: db}
 }
 
-func (r *TaskRepo) ListTasks(ctx context.Context, limit int, offset int) (_ []domain.Task, _ error) {
-	panic("not implemented") // TODO: Implement
+func (r *TaskRepo) ListTasks(ctx context.Context, limit int, offset int) (_ *domain.PaginatedTasks, _ error) {
+	var total int
+
+	err := r.db.Conn().QueryRow(ctx, `
+		SELECT COUNT(*)
+		FROM core.tasks
+	`).Scan(&total)
+	if err != nil {
+		return nil, normalizePGError(err)
+	}
+
+	if offset >= total {
+		return &domain.PaginatedTasks{Tasks: []domain.Task{}, Total: total}, nil
+	}
+
+	rows, err := r.db.Conn().Query(ctx, `
+		SELECT id, title, created_at, updated_at, completed_at, deleted_at
+		FROM core.tasks 
+		ORDER BY created_at ASC
+		LIMIT $1 OFFSET $2
+	`, limit, offset)
+
+	if err != nil {
+		return nil, normalizePGError(err)
+	}
+	defer rows.Close()
+
+	tasks := []domain.Task{}
+	for rows.Next() {
+		var task domain.Task
+		if err := rows.Scan(
+			&task.ID,
+			&task.Title,
+			&task.CreatedAt,
+			&task.UpdatedAt,
+			&task.CompletedAt,
+			&task.DeletedAt,
+		); err != nil {
+			return nil, normalizePGError(err)
+		}
+		tasks = append(tasks, task)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, normalizePGError(err)
+	}
+
+	nextOffset := offset + len(tasks)
+	if nextOffset >= total {
+		nextOffset = -1
+	}
+
+	return &domain.PaginatedTasks{
+		Tasks:      tasks,
+		Total:      total,
+		NextOffset: nextOffset,
+	}, nil
 }
 
 func (r *TaskRepo) GetTask(ctx context.Context, id domain.ID) (_ *domain.Task, _ error) {

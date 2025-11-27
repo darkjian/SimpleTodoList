@@ -2,6 +2,7 @@ package usecase_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -160,6 +161,86 @@ func TestTaskService_CreateTask(t *testing.T) {
 				assert.Equal(t, tt.title, got.Task.Title)
 			}
 
+		})
+	}
+}
+
+func TestTaskService_ListTasks(t *testing.T) {
+	in := usecase.ListTasksIn{}
+	tests := []struct {
+		name         string
+		input        usecase.ListTasksIn
+		setupMock    func(mockRepo *mocks.MockTaskRepository)
+		wantTasksLen int
+		wantErr      bool
+	}{
+		{
+			name: "successfully return tasks list",
+			setupMock: func(mockRepo *mocks.MockTaskRepository) {
+
+				expectedTasks := &domain.PaginatedTasks{
+					Tasks: []domain.Task{
+						{
+							ID:    "1",
+							Title: "First task",
+						},
+						{
+							ID:    "2",
+							Title: "Second task",
+						},
+					},
+				}
+
+				mockRepo.EXPECT().
+					ListTasks(gomock.Any(), in.Limit, in.Offset).
+					Return(expectedTasks, nil)
+			},
+			wantTasksLen: 2,
+			wantErr:      false,
+		},
+		{
+			name: "return empty list",
+			setupMock: func(mockRepo *mocks.MockTaskRepository) {
+
+				var emptyTasks domain.PaginatedTasks
+
+				mockRepo.EXPECT().
+					ListTasks(gomock.Any(), in.Limit, in.Offset).
+					Return(&emptyTasks, nil)
+			},
+			wantTasksLen: 0,
+			wantErr:      false,
+		},
+		{
+			name: "return error from repository",
+			setupMock: func(mockRepo *mocks.MockTaskRepository) {
+				mockRepo.EXPECT().
+					ListTasks(gomock.Any(), in.Limit, in.Offset).
+					Return(nil, errors.New("database connection error"))
+			},
+			wantTasksLen: 0,
+			wantErr:      true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			mockRepo := mocks.NewMockTaskRepository(ctrl)
+			tt.setupMock(mockRepo)
+
+			svc := usecase.NewTaskService(mockRepo)
+			tasks, err := svc.ListTasks(context.TODO(), tt.input)
+
+			if tt.wantErr {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+			require.Len(t, tasks.Tasks, tt.wantTasksLen)
 		})
 	}
 }

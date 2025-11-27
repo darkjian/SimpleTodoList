@@ -48,7 +48,7 @@ func Run() {
 	// api
 	api := r.Group("/api/v1")
 	{
-		// api.GET("/tasks", task_handler.ListTasks)
+		api.GET("/tasks", task_handler.ListTasks)
 		api.GET("/tasks/:id", task_handler.GetTask)
 		api.POST("/tasks", task_handler.CreateTask)
 		// api.PUT("/tasks/:id", task_handler.UpdateTask)
