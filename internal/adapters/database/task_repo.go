@@ -127,5 +127,10 @@ func (r *TaskRepo) UpdateTask(ctx context.Context, t *domain.Task) (_ error) {
 }
 
 func (r *TaskRepo) SoftDeleteTask(ctx context.Context, id domain.ID) (_ error) {
-	panic("not implemented") // TODO: Implement
+	query := `DELETE from core.tasks WHERE id=$1`
+	if _, err := r.db.Conn().Exec(ctx, query, id); err != nil {
+		return normalizePGError(err)
+	}
+
+	return nil
 }

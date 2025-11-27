@@ -13,6 +13,7 @@ type GetTaskRepository interface {
 	GetTask(ctx context.Context, id domain.ID) (_ *domain.Task, _ error)
 	CreateTask(ctx context.Context, t *domain.Task) error
 	ListTasks(ctx context.Context, limit, offset int) (*domain.PaginatedTasks, error)
+	SoftDeleteTask(ctx context.Context, id domain.ID) error
 }
 
 type TaskService struct {
@@ -98,4 +99,16 @@ func (s *TaskService) ListTasks(ctx context.Context, in ListTasksIn) (ListTasksO
 		Total:      out.Total,
 		NextOffset: out.NextOffset,
 	}, nil
+}
+
+func (s *TaskService) DeleteTask(ctx context.Context, id string) error {
+	if _, err := uuid.Parse(id); err != nil {
+		return e.New(CodeInvalidIDFormat, errors.New("invalid UUID format"))
+	}
+
+	if err := s.repo.SoftDeleteTask(ctx, domain.ID(id)); err != nil {
+		return e.New(CodeInternal, err)
+	}
+
+	return nil
 }

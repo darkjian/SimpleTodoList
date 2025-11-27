@@ -13,6 +13,7 @@ type TaskServicer interface {
 	GetTask(ctx context.Context, id string) (usecase.GetTaskOut, error)
 	CreateTask(ctx context.Context, title string) (usecase.CreateTaskOut, error)
 	ListTasks(ctx context.Context, in usecase.ListTasksIn) (usecase.ListTasksOut, error)
+	DeleteTask(ctx context.Context, id string) error
 }
 
 type TaskHandler struct {
@@ -106,4 +107,25 @@ func (h *TaskHandler) ListTasks(c *gin.Context) {
 	}
 
 	presenter.ListTasksOnSuccess(c, out)
+}
+
+type DeleteTask struct {
+	TaskID string `uri:"id" binding:"required,uuid"`
+}
+
+func (h *TaskHandler) DeleteTask(c *gin.Context) {
+	var request DeleteTask
+
+	if err := c.ShouldBindUri(&request); err != nil {
+		presenter.DeleteTaskWithError(c, e.New(usecase.CodeInvalidIDFormat, err))
+		return
+	}
+
+	err := h.service.DeleteTask(c.Request.Context(), request.TaskID)
+	if err != nil {
+		presenter.DeleteTaskWithError(c, err)
+		return
+	}
+
+	c.Status(200)
 }

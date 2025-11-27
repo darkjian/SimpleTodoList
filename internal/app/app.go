@@ -52,7 +52,7 @@ func Run() {
 		api.GET("/tasks/:id", task_handler.GetTask)
 		api.POST("/tasks", task_handler.CreateTask)
 		// api.PUT("/tasks/:id", task_handler.UpdateTask)
-		// api.DELETE("/tasks/:id", task_handler.DeleteTask)
+		api.DELETE("/tasks/:id", task_handler.DeleteTask)
 	}
 
 	server := &http.Server{
