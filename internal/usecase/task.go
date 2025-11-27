@@ -11,6 +11,7 @@ import (
 
 type GetTaskRepository interface {
 	GetTask(ctx context.Context, id domain.ID) (_ *domain.Task, _ error)
+	CreateTask(ctx context.Context, t *domain.Task) error
 }
 
 type TaskService struct {
@@ -31,7 +32,6 @@ func (s *TaskService) GetTask(ctx context.Context, id string) (GetTaskOut, error
 	}
 
 	task, err := s.repo.GetTask(ctx, domain.ID(id))
-
 	if err != nil {
 		switch {
 		case errors.Is(err, domain.ErrNotFound):
@@ -42,4 +42,31 @@ func (s *TaskService) GetTask(ctx context.Context, id string) (GetTaskOut, error
 	}
 
 	return GetTaskOut{Task: *task}, nil
+}
+
+type CreateTaskOut struct {
+	Task domain.Task
+}
+
+func (s *TaskService) CreateTask(ctx context.Context, title string) (CreateTaskOut, error) {
+
+	titleLen := len(title)
+	if titleLen == 0 || titleLen > 20 {
+		return CreateTaskOut{}, e.New(CodeInvalidTitle, errors.New("incorrect title length"))
+	}
+
+	task := &domain.Task{
+		Title: title,
+	}
+
+	if err := s.repo.CreateTask(ctx, task); err != nil {
+		switch {
+		case errors.Is(err, domain.ErrNotFound):
+			return CreateTaskOut{}, e.New(CodeNotFound, err)
+		default:
+			return CreateTaskOut{}, e.New(CodeInternal, err)
+		}
+	}
+
+	return CreateTaskOut{Task: *task}, nil
 }

@@ -36,7 +36,14 @@ func (r *TaskRepo) GetTask(ctx context.Context, id domain.ID) (_ *domain.Task, _
 
 	var task domain.Task
 
-	if err := r.db.Conn().QueryRow(ctx, query, id).Scan(&task); err != nil {
+	if err := r.db.Conn().QueryRow(ctx, query, id).Scan(
+		&task.ID,
+		&task.Title,
+		&task.CreatedAt,
+		&task.UpdatedAt,
+		&task.CompletedAt,
+		&task.DeletedAt,
+	); err != nil {
 		return nil, normalizePGError(err)
 	}
 
@@ -44,7 +51,20 @@ func (r *TaskRepo) GetTask(ctx context.Context, id domain.ID) (_ *domain.Task, _
 }
 
 func (r *TaskRepo) CreateTask(ctx context.Context, t *domain.Task) (_ error) {
-	panic("not implemented") // TODO: Implement
+	query := `INSERT 
+	INTO core.tasks (title)
+	VALUES ($1)
+	RETURNING id, created_at, updated_at;`
+
+	if err := r.db.Conn().QueryRow(ctx, query, t.Title).Scan(
+		&t.ID,
+		&t.CreatedAt,
+		&t.UpdatedAt,
+	); err != nil {
+		return normalizePGError(err)
+	}
+
+	return nil
 }
 
 func (r *TaskRepo) UpdateTask(ctx context.Context, t *domain.Task) (_ error) {

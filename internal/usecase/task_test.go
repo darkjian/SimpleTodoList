@@ -77,6 +77,8 @@ func TestTaskService_GetTask(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
 			mockRepo := mocks.NewMockTaskRepository(ctrl)
 			tt.mockFunc(mockRepo)
 
@@ -90,6 +92,74 @@ func TestTaskService_GetTask(t *testing.T) {
 			}
 
 			assert.Equal(t, tt.want, got.Task)
+		})
+	}
+}
+
+func TestTaskService_CreateTask(t *testing.T) {
+
+	tests := []struct {
+		name     string
+		title    string
+		mockFunc func(m *mocks.MockTaskRepository)
+		wantErr  bool
+	}{
+		{
+			name:  "successfully create task",
+			title: "test title",
+			mockFunc: func(m *mocks.MockTaskRepository) {
+				expectedTask := &domain.Task{
+					Title: "test title",
+				}
+				m.EXPECT().CreateTask(gomock.Any(), expectedTask).
+					Return(nil)
+			},
+			wantErr: false,
+		},
+		{
+			name:     "unsuccessfully create task with length < 1",
+			title:    "",
+			mockFunc: func(m *mocks.MockTaskRepository) {},
+			wantErr:  true,
+		},
+		{
+			name:     "unsuccessfully create task with length > 20",
+			title:    "fivefivefivefivefive1",
+			mockFunc: func(m *mocks.MockTaskRepository) {},
+			wantErr:  true,
+		},
+		{
+			name:  "successfully create task with length = 20",
+			title: "test title with max!",
+			mockFunc: func(m *mocks.MockTaskRepository) {
+				expectedTask := &domain.Task{
+					Title: "test title with max!",
+				}
+				m.EXPECT().CreateTask(gomock.Any(), expectedTask).
+					Return(nil)
+			},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			mockRepo := mocks.NewMockTaskRepository(ctrl)
+			tt.mockFunc(mockRepo)
+
+			svc := usecase.NewTaskService(mockRepo)
+			got, err := svc.CreateTask(context.TODO(), tt.title)
+
+			if tt.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, tt.title, got.Task.Title)
+			}
+
 		})
 	}
 }

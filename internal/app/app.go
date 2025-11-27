@@ -50,7 +50,7 @@ func Run() {
 	{
 		// api.GET("/tasks", task_handler.ListTasks)
 		api.GET("/tasks/:id", task_handler.GetTask)
-		// api.POST("/tasks", task_handler.CreateTask)
+		api.POST("/tasks", task_handler.CreateTask)
 		// api.PUT("/tasks/:id", task_handler.UpdateTask)
 		// api.DELETE("/tasks/:id", task_handler.DeleteTask)
 	}

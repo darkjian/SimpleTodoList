@@ -1,0 +1,43 @@
+package presenter
+
+import (
+	"errors"
+	"net/http"
+
+	"github.com/darkjian/simpletodolist/internal/usecase"
+	e "github.com/darkjian/simpletodolist/internal/usecase/errorx"
+	"github.com/gin-gonic/gin"
+)
+
+func CreateTaskWithError(c *gin.Context, err error) {
+	var ex *e.ErrorX
+	var statusCode = http.StatusInternalServerError
+	var message = gin.H{"error": "internal server error"}
+
+	if errors.As(err, &ex) {
+		switch ex.Code {
+		case usecase.CodeNotFound:
+			message["error"] = "not found"
+			statusCode = 404
+		case usecase.CodeInternal:
+			message["error"] = "internal server error"
+			statusCode = 500
+		case usecase.CodeInvalidTitle:
+			message["error"] = "invalid title"
+			statusCode = 400
+		}
+	}
+
+	c.AbortWithStatusJSON(statusCode, message)
+}
+
+func CreateTaskOnSuccess(c *gin.Context, out usecase.CreateTaskOut) {
+	c.JSON(200, gin.H{
+		"id":           out.Task.ID,
+		"title":        out.Task.Title,
+		"created_at":   out.Task.CreatedAt,
+		"updated_at":   out.Task.UpdatedAt,
+		"completed_at": out.Task.CompletedAt,
+		"deleted_at":   out.Task.DeletedAt,
+	})
+}

@@ -11,6 +11,7 @@ import (
 
 type TaskServicer interface {
 	GetTask(ctx context.Context, id string) (usecase.GetTaskOut, error)
+	CreateTask(ctx context.Context, title string) (usecase.CreateTaskOut, error)
 }
 
 type TaskHandler struct {
@@ -40,4 +41,25 @@ func (h *TaskHandler) GetTask(c *gin.Context) {
 	}
 
 	presenter.GetTaskOnSuccess(c, out)
+}
+
+type CreateTaskRequest struct {
+	Title string `json:"title" binding:"required,min=1,max=20"`
+}
+
+func (h *TaskHandler) CreateTask(c *gin.Context) {
+	var request CreateTaskRequest
+
+	if err := c.ShouldBindBodyWithJSON(&request); err != nil {
+		presenter.CreateTaskWithError(c, e.New(usecase.CodeInvalidTitle, err))
+		return
+	}
+
+	out, err := h.service.CreateTask(c.Request.Context(), request.Title)
+	if err != nil {
+		presenter.CreateTaskWithError(c, err)
+		return
+	}
+
+	presenter.CreateTaskOnSuccess(c, out)
 }
