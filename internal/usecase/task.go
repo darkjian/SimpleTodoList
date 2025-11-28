@@ -16,6 +16,7 @@ type GetTaskRepository interface {
 	ListTasks(ctx context.Context, limit, offset int) (*domain.PaginatedTasks, error)
 	DeleteTask(ctx context.Context, id domain.ID) error
 	CompleteTask(ctx context.Context, id domain.ID, completedAt time.Time) error
+	UnCompleteTask(ctx context.Context, id domain.ID) error
 }
 
 type TaskService struct {
@@ -111,6 +112,18 @@ func (s *TaskService) CompleteTask(ctx context.Context, id string) error {
 	}
 
 	if err := s.repo.CompleteTask(ctx, domain.ID(id), time.Now().UTC()); err != nil {
+		return e.New(CodeInternal, err)
+	}
+
+	return nil
+}
+
+func (s *TaskService) UnCompleteTask(ctx context.Context, id string) error {
+	if _, err := uuid.Parse(id); err != nil {
+		return e.New(CodeInvalidIDFormat, errors.New("invalid UUID format"))
+	}
+
+	if err := s.repo.UnCompleteTask(ctx, domain.ID(id)); err != nil {
 		switch {
 		case errors.Is(err, domain.ErrNotFound):
 			return e.New(CodeNotFound, err)

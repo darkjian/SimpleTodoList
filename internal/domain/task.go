@@ -21,6 +21,7 @@ type TaskRepo interface {
 	CreateTask(ctx context.Context, t *Task) error
 	CompleteTask(ctx context.Context, id ID, completedAt time.Time) error
 	DeleteTask(ctx context.Context, id ID) error
+	UnCompleteTask(ctx context.Context, id ID) error
 }
 
 type Task struct {
@@ -29,7 +30,6 @@ type Task struct {
 	CreatedAt   time.Time  `json:"created_at"`
 	UpdatedAt   time.Time  `json:"updated_at"`
 	CompletedAt *time.Time `json:"completed_at"`
-	DeletedAt   *time.Time `json:"deleted_at"`
 }
 
 type PaginatedTasks struct {

@@ -52,6 +52,7 @@ func Run() {
 		api.GET("/tasks/:id", task_handler.GetTask)
 		api.POST("/tasks", task_handler.CreateTask)
 		api.PUT("/tasks/:id/complete", task_handler.CompleteTask)
+		api.PUT("/tasks/:id/uncomplete", task_handler.UnCompleteTask)
 		api.DELETE("/tasks/:id", task_handler.DeleteTask)
 	}
 

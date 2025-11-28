@@ -275,12 +275,10 @@ func TestTaskService_DeleteTask(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "return error for invalid UUID format",
-			id:   "invalid-uuid",
-			setupMock: func(mockRepo *mocks.MockTaskRepository) {
-				// Для этого случая репозиторий не должен вызываться
-			},
-			wantErr: true,
+			name:      "return error for invalid UUID format",
+			id:        "invalid-uuid",
+			setupMock: func(mockRepo *mocks.MockTaskRepository) {},
+			wantErr:   true,
 		},
 		{
 			name: "return error when repository fails",
@@ -311,5 +309,127 @@ func TestTaskService_DeleteTask(t *testing.T) {
 				require.NoError(t, err)
 			}
 		})
+	}
+}
+
+func TestTaskService_CompleteTask(t *testing.T) {
+	tests := []struct {
+		name      string
+		id        string
+		setupMock func(mockRepo *mocks.MockTaskRepository)
+		wantErr   bool
+	}{
+		{
+			name: "successfully complete task with valid UUID",
+			id:   "550e8400-e29b-41d4-a716-446655440000",
+			setupMock: func(mockRepo *mocks.MockTaskRepository) {
+				mockRepo.EXPECT().
+					CompleteTask(gomock.Any(), domain.ID("550e8400-e29b-41d4-a716-446655440000"), gomock.Any()).
+					Return(nil)
+			},
+			wantErr: false,
+		},
+		{
+			name:      "return error for invalid UUID format",
+			id:        "invalid-uuid",
+			setupMock: func(mockRepo *mocks.MockTaskRepository) {},
+			wantErr:   true,
+		},
+		{
+			name: "return error when repository fails",
+			id:   "550e8400-e29b-41d4-a716-446655440000",
+			setupMock: func(mockRepo *mocks.MockTaskRepository) {
+				mockRepo.EXPECT().
+					CompleteTask(gomock.Any(), domain.ID("550e8400-e29b-41d4-a716-446655440000"), gomock.Any()).
+					Return(errors.New("database error"))
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			mockRepo := mocks.NewMockTaskRepository(ctrl)
+			tt.setupMock(mockRepo)
+
+			svc := usecase.NewTaskService(mockRepo)
+			err := svc.CompleteTask(context.TODO(), tt.id)
+
+			if tt.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+
+	}
+}
+
+func TestTaskService_UnCompleteTask(t *testing.T) {
+	tests := []struct {
+		name      string
+		id        string
+		setupMock func(mockRepo *mocks.MockTaskRepository)
+		wantErr   bool
+	}{
+		{
+			name: "successfully complete task with valid UUID",
+			id:   "550e8400-e29b-41d4-a716-446655440000",
+			setupMock: func(mockRepo *mocks.MockTaskRepository) {
+				mockRepo.EXPECT().
+					UnCompleteTask(gomock.Any(), domain.ID("550e8400-e29b-41d4-a716-446655440000")).
+					Return(nil)
+			},
+			wantErr: false,
+		},
+		{
+			name:      "return error for invalid UUID format",
+			id:        "invalid-uuid",
+			setupMock: func(mockRepo *mocks.MockTaskRepository) {},
+			wantErr:   true,
+		},
+		{
+			name: "return error when repository fails",
+			id:   "550e8400-e29b-41d4-a716-446655440000",
+			setupMock: func(mockRepo *mocks.MockTaskRepository) {
+				mockRepo.EXPECT().
+					UnCompleteTask(gomock.Any(), domain.ID("550e8400-e29b-41d4-a716-446655440000")).
+					Return(errors.New("database error"))
+			},
+			wantErr: true,
+		},
+		{
+			name: "return error when repository fails",
+			id:   "550e8400-e29b-41d4-a716-446655440000",
+			setupMock: func(mockRepo *mocks.MockTaskRepository) {
+				mockRepo.EXPECT().
+					UnCompleteTask(gomock.Any(), domain.ID("550e8400-e29b-41d4-a716-446655440000")).
+					Return(domain.ErrNotFound)
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			mockRepo := mocks.NewMockTaskRepository(ctrl)
+			tt.setupMock(mockRepo)
+
+			svc := usecase.NewTaskService(mockRepo)
+			err := svc.UnCompleteTask(context.TODO(), tt.id)
+
+			if tt.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+
 	}
 }

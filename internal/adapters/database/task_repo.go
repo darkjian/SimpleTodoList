@@ -3,6 +3,7 @@ package database
 
 import (
 	"context"
+	"log/slog"
 	"time"
 
 	"github.com/darkjian/simpletodolist/internal/domain"
@@ -41,7 +42,7 @@ func (r *TaskRepo) ListTasks(ctx context.Context, limit int, offset int) (_ *dom
 	}
 
 	rows, err := r.db.Conn().Query(ctx, `
-		SELECT id, title, created_at, updated_at, completed_at, deleted_at
+		SELECT id, title, created_at, updated_at, completed_at
 		FROM core.tasks 
 		ORDER BY created_at ASC
 		LIMIT $1 OFFSET $2
@@ -61,7 +62,6 @@ func (r *TaskRepo) ListTasks(ctx context.Context, limit int, offset int) (_ *dom
 			&task.CreatedAt,
 			&task.UpdatedAt,
 			&task.CompletedAt,
-			&task.DeletedAt,
 		); err != nil {
 			return nil, normalizePGError(err)
 		}
@@ -86,7 +86,7 @@ func (r *TaskRepo) ListTasks(ctx context.Context, limit int, offset int) (_ *dom
 
 func (r *TaskRepo) GetTask(ctx context.Context, id domain.ID) (_ *domain.Task, _ error) {
 	query := `SELECT 
-	id, title, created_at, updated_at, completed_at, deleted_at 
+	id, title, created_at, updated_at, completed_at 
 	FROM core.tasks 
 	WHERE id=$1`
 
@@ -98,7 +98,6 @@ func (r *TaskRepo) GetTask(ctx context.Context, id domain.ID) (_ *domain.Task, _
 		&task.CreatedAt,
 		&task.UpdatedAt,
 		&task.CompletedAt,
-		&task.DeletedAt,
 	); err != nil {
 		return nil, normalizePGError(err)
 	}
@@ -135,6 +134,16 @@ func (r *TaskRepo) CompleteTask(ctx context.Context, id domain.ID, completedAt t
 func (r *TaskRepo) DeleteTask(ctx context.Context, id domain.ID) (_ error) {
 	query := `DELETE from core.tasks WHERE id=$1`
 	if _, err := r.db.Conn().Exec(ctx, query, id); err != nil {
+		return normalizePGError(err)
+	}
+
+	return nil
+}
+
+func (r *TaskRepo) UnCompleteTask(ctx context.Context, id domain.ID) (_ error) {
+	query := `UPDATE core.tasks SET completed_at=NULL WHERE id=$1`
+	if _, err := r.db.Conn().Exec(ctx, query, id); err != nil {
+		slog.Warn("bd", slog.Any("error", err))
 		return normalizePGError(err)
 	}
 

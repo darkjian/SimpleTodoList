@@ -38,6 +38,5 @@ func CreateTaskOnSuccess(c *gin.Context, out usecase.CreateTaskOut) {
 		"created_at":   out.Task.CreatedAt,
 		"updated_at":   out.Task.UpdatedAt,
 		"completed_at": out.Task.CompletedAt,
-		"deleted_at":   out.Task.DeletedAt,
 	})
 }
