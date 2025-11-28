@@ -17,8 +17,8 @@ import (
 )
 
 func Run() {
-
-	conf, err := config.Load("./config/local.yaml")
+	// CONFIG_PATH env created in docker-compose.yaml
+	conf, err := config.Load(os.Getenv("CONFIG_PATH"))
 	if err != nil {
 		slog.Error("loading config", slog.Any("error", err))
 		os.Exit(1)

@@ -15,6 +15,9 @@ services:
       test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${DATABASE_NAME}" ]
       interval: 10s
       timeout: 5s
+      retries: 5
+    networks:
+      - app_network
 
   migrate:
     container_name: task_migrations
@@ -22,10 +25,43 @@ services:
     depends_on:
       db:
         condition: service_healthy
-
     volumes:
       - ./migrations:/migrations
     command: [ "-path", ./migrations, "-database", "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${DATABASE_NAME}?sslmode=disable", "up" ]
+    networks:
+      - app_network
+
+  app:
+    container_name: task_app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      CONFIG_PATH: "/config/local.yaml"
+    volumes:
+      - ./config:/config:ro
+    ports:
+      - "${APP_PORT}:8080"
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - app_network
 
 volumes:
   postgres_data:
+
+
+networks:
+  app_network:
+    driver: bridge
+    name: task_app_network
